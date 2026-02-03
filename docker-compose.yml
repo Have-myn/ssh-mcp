@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: webshell-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-webshell_root}
+      - MYSQL_DATABASE=${WEBSHELL_DB_DATABASE:-webshell}
+      - MYSQL_USER=${WEBSHELL_DB_USER:-webshell}
+      - MYSQL_PASSWORD=${WEBSHELL_DB_PASSWORD:-webshell_pass}
+    ports:
+      - "3306:3306"
+    volumes:
+      - webshell-mysql-data:/var/lib/mysql
+
+  ssh-mcp:
+    build: .
+    container_name: ssh-mcp
+    image: ssh-mcp:v1.0.0
+    depends_on:
+      - mysql
+    ports:
+      - "3001:3001"
+      - "9100:9100"
+    environment:
+      - PORT=3001
+      # MCP 通过 HTTP 调用内联 Gateway
+      - SSH_WEBSHELL_API_URL=${SSH_WEBSHELL_API_URL:-http://localhost:9100}
+      - SSH_WEBSHELL_HTTP_TIMEOUT_MS=${SSH_WEBSHELL_HTTP_TIMEOUT_MS:-15000}
+      # 内联 WebShell Gateway 端口与对外地址
+      - MOCK_WEBSHELL_PORT=${MOCK_WEBSHELL_PORT:-9100}
+      - WEBSHELL_PUBLIC_BASE_URL=${WEBSHELL_PUBLIC_BASE_URL:-http://localhost:9100}
+      # MySQL 连接（与 db.ts 中默认值保持一致）
+      - WEBSHELL_DB_HOST=mysql
+      - WEBSHELL_DB_PORT=${WEBSHELL_DB_PORT:-3306}
+      - WEBSHELL_DB_USER=${WEBSHELL_DB_USER:-webshell}
+      - WEBSHELL_DB_PASSWORD=${WEBSHELL_DB_PASSWORD:-webshell_pass}
+      - WEBSHELL_DB_DATABASE=${WEBSHELL_DB_DATABASE:-webshell}
+    restart: unless-stopped
+
+volumes:
+  webshell-mysql-data:

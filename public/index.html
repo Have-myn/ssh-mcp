@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <title>SSH MCP Cloud Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        /* Nebula Theme Palette */
+        --surface-1: #f8fafc; /* Main Background */
+        --surface-2: rgba(255, 255, 255, 0.85); /* Card Background */
+        --surface-3: #ffffff; /* Input/Elevated */
+        
+        --primary: #4f46e5; /* Indigo 600 */
+        --primary-hover: #4338ca;
+        --primary-light: #e0e7ff;
+        
+        --text-1: #0f172a; /* Slate 900 */
+        --text-2: #64748b; /* Slate 500 */
+        --text-3: #94a3b8; /* Slate 400 */
+        
+        --border: #e2e8f0;
+        --border-focus: #4f46e5;
+        
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        
+        --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
+        
+        --radius-lg: 16px;
+        --radius-md: 8px;
+        --radius-sm: 4px;
+      }
+
+      * { box-sizing: border-box; }
+      
+      body {
+        margin: 0;
+        font-family: var(--font-sans);
+        background-color: var(--surface-1);
+        color: var(--text-1);
+        min-height: 100vh;
+        /* Subtle Gradient Mesh Background */
+        background-image: 
+          radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+          radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+          radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.05) 0px, transparent 50%);
+        background-attachment: fixed;
+      }
+
+      /* Layout Grid */
+      .layout {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        min-height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        background: var(--surface-3);
+        border-right: 1px solid var(--border);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--text-1);
+        letter-spacing: -0.02em;
+      }
+      
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, var(--primary), #818cf8);
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        color: white;
+      }
+
+      .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .nav-item {
+        padding: 10px 12px;
+        border-radius: var(--radius-md);
+        color: var(--text-2);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .nav-item.active {
+        background: var(--primary-light);
+        color: var(--primary);
+      }
+
+      .nav-item:hover:not(.active) {
+        background: var(--surface-1);
+        color: var(--text-1);
+      }
+
+      /* Main Content */
+      .main {
+        padding: 32px 48px;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+      }
+
+      .page-title h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .page-title p {
+        margin: 4px 0 0;
+        color: var(--text-2);
+        font-size: 14px;
+      }
+
+      /* Status Indicator */
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text-3);
+        position: relative;
+      }
+
+      .status-dot.green { background: var(--success); box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+      .status-dot.red { background: var(--danger); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+      
+      .status-dot.green::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        background: var(--success);
+        opacity: 0.2;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.2; }
+        50% { transform: scale(1.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 0; }
+      }
+
+      /* Cards */
+      .card {
+        background: var(--surface-2);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid white;
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow-md);
+        margin-bottom: 24px;
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .card-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .card-title::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 16px;
+        background: var(--primary);
+        border-radius: 2px;
+      }
+
+      /* Forms */
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .form-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-2);
+      }
+
+      .form-input, .form-select {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--surface-3);
+        color: var(--text-1);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        transition: all 0.2s;
+      }
+
+      .form-input:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 3px var(--primary-light);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 20px;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-outline {
+        background: white;
+        border: 1px solid var(--border);
+        color: var(--text-2);
+      }
+
+      .btn-outline:hover {
+        border-color: var(--text-3);
+        background: var(--surface-1);
+      }
+      
+      .btn-danger {
+        background: #fee2e2;
+        color: var(--danger);
+      }
+      
+      .btn-danger:hover {
+        background: #fecaca;
+      }
+
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      /* Session Link Box */
+      .session-result {
+        background: var(--primary-light);
+        border: 1px solid rgba(79, 70, 229, 0.1);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        margin-top: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .session-link {
+        font-family: var(--font-mono);
+        color: var(--primary);
+        font-size: 13px;
+        word-break: break-all;
+      }
+
+      .status-text {
+        font-size: 13px;
+        margin-top: 8px;
+        padding-left: 4px;
+      }
+      
+      .status-text.error { color: var(--danger); }
+      .status-text.success { color: var(--success); }
+
+      /* Table */
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th {
+        text-align: left;
+        padding: 16px;
+        font-weight: 600;
+        color: var(--text-2);
+        border-bottom: 1px solid var(--border);
+        background: rgba(248, 250, 252, 0.5);
+      }
+
+      td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-1);
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      tr:hover td {
+        background: rgba(241, 245, 249, 0.5);
+      }
+
+      .target-id {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-3);
+        margin-top: 4px;
+      }
+
+      .target-host {
+        font-family: var(--font-mono);
+        background: var(--surface-1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+
+      .action-group {
+        display: flex;
+        gap: 8px;
+      }
+
+      /* Recent Sessions */
+      .recent-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .recent-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        transition: all 0.2s;
+      }
+
+      .recent-item:hover {
+        border-color: var(--primary);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .recent-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .recent-target {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .recent-time {
+        font-size: 12px;
+        color: var(--text-3);
+      }
+
+      .recent-link-btn {
+        font-size: 12px;
+        color: var(--primary);
+        font-weight: 500;
+        text-decoration: none;
+        padding: 4px 12px;
+        background: var(--primary-light);
+        border-radius: 20px;
+      }
+
+      .recent-link-btn:hover {
+        background: var(--primary);
+        color: white;
+      }
+
+      /* Responsive */
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          display: none; /* Simplify for mobile for now, or make hamburger */
+        }
+        .main {
+          padding: 24px;
+        }
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+      }
+
+      .modal-content {
+        background-color: var(--surface-1);
+        margin: 5% auto;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        width: 90%;
+        max-width: 1000px;
+        box-shadow: var(--shadow-lg);
+        animation: modalSlideIn 0.3s ease;
+      }
+
+      @keyframes modalSlideIn {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--surface-3);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-1);
+      }
+
+      .modal-close {
+        color: var(--text-2);
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+      }
+
+      .modal-close:hover {
+        color: var(--danger);
+      }
+
+      .modal-body {
+        padding: 24px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+      }
+
+      .chart-card {
+        background: white;
+        padding: 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .chart-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-2);
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 200px;
+        width: 100%;
+      }
+
+      .metric-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-1);
+        font-family: var(--font-mono);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">
+          <div class="logo-icon">M</div>
+          <span>MCP Console</span>
+        </div>
+        <ul class="nav-menu">
+          <li class="nav-item active">
+            <span>💻</span> 实例列表
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main">
+        <header class="header">
+          <div class="page-title">
+            <h1>SSH 实例管理</h1>
+            <p>管理您的 WebShell 连接会话与主机配置</p>
+          </div>
+          <div class="status-badge">
+            <div id="health-dot" class="status-dot"></div>
+            <span id="health-label">检测中...</span>
+          </div>
+        </header>
+
+        <!-- Stats Overview (Mockup for Visuals) -->
+        <div class="form-grid">
+          <div class="card" style="padding: 20px; display: flex; align-items: center; gap: 16px;">
+            <div style="width: 40px; height: 40px; background: #e0f2fe; border-radius: 8px; display: grid; place-items: center; color: #0284c7;">☁️</div>
+            <div>
+              <div style="font-size: 12px; color: var(--text-2);">运行中实例</div>
+              <div style="font-size: 20px; font-weight: 700; color: var(--text-1);" id="targets-count-label">Loading...</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick Connect Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">快速连接</div>
+          </div>
+          <form id="session-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">选择主机</label>
+                <select id="target-select" class="form-select">
+                  <option value="">加载中...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">目标 ID (自动填充)</label>
+                <input type="text" id="target-id" class="form-input" placeholder="输入或选择 ID" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">连接用途 (可选)</label>
+                <input type="text" id="reason" class="form-input" placeholder="例如：系统维护">
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <button type="submit" id="submit-btn" class="btn btn-primary">
+                <span>🚀</span> 创建会话
+              </button>
+              <div id="status-msg" class="status-text"></div>
+            </div>
+            
+            <div id="result-area" class="session-result" style="display: none;">
+              <a
+                id="session-link"
+                class="session-link"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+              ></a>
+              <button type="button" id="copy-link-btn" class="btn btn-sm btn-outline">复制链接</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Target Management Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">主机列表</div>
+            <div style="display: flex; gap: 12px;">
+              <input type="text" id="target-filter" class="form-input" placeholder="搜索主机..." style="width: 200px;">
+              <button type="button" id="refresh-targets-btn" class="btn btn-outline btn-sm">刷新</button>
+            </div>
+          </div>
+          
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>名称 / ID</th>
+                  <th>地址 (Host:Port)</th>
+                  <th>用户名</th>
+                  <th style="width: 150px;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="targets-body">
+                <!-- Rows injected by JS -->
+              </tbody>
+            </table>
+            <div id="targets-empty" style="text-align: center; padding: 40px; color: var(--text-3); display: none;">
+              暂无主机数据
+            </div>
+          </div>
+          
+          <!-- Add/Edit Form Area (Collapsible or just below) -->
+          <div style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
+            <div class="card-title" id="target-form-mode" style="margin-bottom: 20px;">新增主机配置</div>
+            <form id="target-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">ID (唯一标识)</label>
+                  <input type="text" id="new-target-id" class="form-input" placeholder="例如: web-server-01" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">显示名称</label>
+                  <input type="text" id="new-name" class="form-input" placeholder="例如: 生产环境 Web">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">主机地址</label>
+                  <input type="text" id="new-host" class="form-input" placeholder="192.168.1.100" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">端口</label>
+                  <input type="number" id="new-port" class="form-input" placeholder="22">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">用户名</label>
+                  <input type="text" id="new-username" class="form-input" placeholder="root" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">密码 (可选)</label>
+                  <input type="password" id="new-password" class="form-input" placeholder="留空不修改">
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px;">
+                <button type="submit" id="target-submit-btn" class="btn btn-primary">
+                  <span>💾</span> 保存主机
+                </button>
+                <button type="button" id="target-reset-btn" class="btn btn-outline">
+                  重置
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Recent Sessions Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">最近会话</div>
+          </div>
+          <div id="recent-list" class="recent-list">
+            <!-- Items injected by JS -->
+          </div>
+          <div id="recent-empty" style="text-align: center; padding: 20px; color: var(--text-3); display: none;">
+            暂无历史会话
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <script>
+      // Core Logic Preserved
+      const targetSelect = document.getElementById('target-select');
+      const targetInput = document.getElementById('target-id');
+      const reasonInput = document.getElementById('reason');
+      const submitBtn = document.getElementById('submit-btn');
+      const statusMsg = document.getElementById('status-msg');
+      const resultArea = document.getElementById('result-area');
+      const sessionLink = document.getElementById('session-link');
+      const copyLinkBtn = document.getElementById('copy-link-btn');
+      const healthLabel = document.getElementById('health-label');
+      const healthDot = document.getElementById('health-dot');
+
+      const targetsTableBody = document.getElementById('targets-body');
+      const targetsEmpty = document.getElementById('targets-empty');
+      const refreshTargetsBtn = document.getElementById('refresh-targets-btn');
+      const targetsCountLabel = document.getElementById('targets-count-label');
+      const targetFilterInput = document.getElementById('target-filter');
+
+      const recentList = document.getElementById('recent-list');
+      const recentEmpty = document.getElementById('recent-empty');
+
+      const targetForm = document.getElementById('target-form');
+      const newTargetIdInput = document.getElementById('new-target-id');
+      const newNameInput = document.getElementById('new-name');
+      const newHostInput = document.getElementById('new-host');
+      const newPortInput = document.getElementById('new-port');
+      const newUsernameInput = document.getElementById('new-username');
+      const newPasswordInput = document.getElementById('new-password');
+      const targetSubmitBtn = document.getElementById('target-submit-btn');
+      const targetResetBtn = document.getElementById('target-reset-btn');
+      const targetFormMode = document.getElementById('target-form-mode');
+
+      const form = document.getElementById('session-form');
+
+      let isCopyLocked = false;
+      let editingTargetId = '';
+      let cachedTargets = [];
+
+      const setStatus = (msg, isError) => {
+        if (!statusMsg) return;
+        statusMsg.textContent = msg;
+        statusMsg.className = 'status-text ' + (isError ? 'error' : 'success');
+        if (msg) {
+           // Auto clear after 3s
+           setTimeout(() => {
+             if (statusMsg.textContent === msg) {
+               statusMsg.textContent = '';
+             }
+           }, 5000);
+        }
+      };
+
+      const setLink = (url) => {
+        if (!resultArea || !sessionLink) return;
+        if (url) {
+          resultArea.style.display = 'flex';
+          sessionLink.textContent = url;
+          sessionLink.href = url;
+        } else {
+          resultArea.style.display = 'none';
+          sessionLink.textContent = '';
+        }
+      };
+
+      const renderRecentSessions = (sessions) => {
+        if (!recentList || !recentEmpty) return;
+        recentList.innerHTML = '';
+        if (!Array.isArray(sessions) || sessions.length === 0) {
+          recentEmpty.style.display = 'block';
+          return;
+        }
+        recentEmpty.style.display = 'none';
+        
+        for (const s of sessions) {
+          const item = document.createElement('div');
+          item.className = 'recent-item';
+          
+          const info = document.createElement('div');
+          info.className = 'recent-info';
+          
+          const targetDiv = document.createElement('div');
+          targetDiv.className = 'recent-target';
+          targetDiv.textContent = s.targetId || 'Unknown ID';
+          
+          const timeDiv = document.createElement('div');
+          timeDiv.className = 'recent-time';
+          if (typeof s.createdAt === 'number') {
+            timeDiv.textContent = new Date(s.createdAt).toLocaleString();
+          }
+          
+          info.appendChild(targetDiv);
+          info.appendChild(timeDiv);
+          
+          const linkBtn = document.createElement('a');
+          linkBtn.className = 'recent-link-btn';
+          if (s.sessionUrl) {
+            linkBtn.href = s.sessionUrl;
+            linkBtn.target = '_blank';
+            linkBtn.textContent = '连接';
+          }
+          
+          item.appendChild(info);
+          item.appendChild(linkBtn);
+          recentList.appendChild(item);
+        }
+      };
+
+      const renderTargetsTable = () => {
+        if (!targetsTableBody || !targetsEmpty) return;
+        targetsTableBody.innerHTML = '';
+        
+        let items = Array.isArray(cachedTargets) ? cachedTargets.slice() : [];
+        const keyword = targetFilterInput ? targetFilterInput.value.trim().toLowerCase() : '';
+        
+        if (keyword) {
+          items = items.filter(t => {
+            const combined = `${t.id || ''} ${t.name || ''} ${t.host || ''}`.toLowerCase();
+            return combined.includes(keyword);
+          });
+        }
+        
+        if (targetsCountLabel) {
+           targetsCountLabel.textContent = cachedTargets.length;
+        }
+
+        if (!items.length) {
+          targetsEmpty.style.display = 'block';
+          return;
+        }
+        targetsEmpty.style.display = 'none';
+
+        for (const t of items) {
+          const tr = document.createElement('tr');
+          
+          // Name / ID Col
+          const nameTd = document.createElement('td');
+          const nameMain = document.createElement('div');
+          nameMain.style.fontWeight = '600';
+          nameMain.textContent = t.name || t.id;
+          const idSpan = document.createElement('div');
+          idSpan.className = 'target-id';
+          idSpan.textContent = t.id;
+          nameTd.appendChild(nameMain);
+          nameTd.appendChild(idSpan);
+          
+          // Host Col
+          const hostTd = document.createElement('td');
+          const hostBadge = document.createElement('span');
+          hostBadge.className = 'target-host';
+          hostBadge.textContent = `${t.host}:${t.port || 22}`;
+          hostTd.appendChild(hostBadge);
+          
+          // User Col
+          const userTd = document.createElement('td');
+          userTd.textContent = t.username || '-';
+          
+          // Actions Col
+          const actionsTd = document.createElement('td');
+          const group = document.createElement('div');
+          group.className = 'action-group';
+          
+          const editBtn = document.createElement('button');
+          editBtn.className = 'btn btn-sm btn-outline';
+          editBtn.textContent = '编辑';
+          editBtn.onclick = () => fillEditForm(t);
+          
+          const delBtn = document.createElement('button');
+          delBtn.className = 'btn btn-sm btn-danger';
+          delBtn.textContent = '删除';
+          delBtn.onclick = () => deleteTarget(t.id, t.name);
+          
+          group.appendChild(editBtn);
+          group.appendChild(delBtn);
+          actionsTd.appendChild(group);
+          
+          tr.appendChild(nameTd);
+          tr.appendChild(hostTd);
+          tr.appendChild(userTd);
+          tr.appendChild(actionsTd);
+          targetsTableBody.appendChild(tr);
+        }
+      };
+      
+      const fillEditForm = (t) => {
+         if (!targetForm) return;
+         editingTargetId = t.id;
+         newTargetIdInput.value = t.id;
+         newTargetIdInput.disabled = true;
+         if (newNameInput) newNameInput.value = t.name || '';
+         newHostInput.value = t.host || '';
+         if (newPortInput) newPortInput.value = t.port || '';
+         newUsernameInput.value = t.username || '';
+         if (newPasswordInput) newPasswordInput.value = '';
+         
+         if (targetFormMode) targetFormMode.textContent = `编辑主机: ${t.id}`;
+         targetSubmitBtn.innerHTML = '<span>💾</span> 更新主机';
+         newHostInput.focus();
+      };
+      
+      const deleteTarget = async (id, name) => {
+        if (!confirm(`确定删除主机 ${name || id} 吗?`)) return;
+        try {
+          const resp = await fetch('/ui/targets/' + encodeURIComponent(id), { method: 'DELETE' });
+          if (resp.ok) {
+            setStatus('删除成功', false);
+            if (editingTargetId === id) resetTargetForm();
+            loadTargets();
+          } else {
+            setStatus('删除失败', true);
+          }
+        } catch(e) {
+          setStatus('网络错误', true);
+        }
+      };
+
+      const resetTargetForm = () => {
+        if (!targetForm) return;
+        targetForm.reset();
+        editingTargetId = '';
+        newTargetIdInput.disabled = false;
+        if (targetFormMode) targetFormMode.textContent = '新增主机配置';
+        targetSubmitBtn.innerHTML = '<span>💾</span> 保存主机';
+      };
+
+      const loadTargets = async () => {
+        try {
+          const resp = await fetch('/ui/targets');
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok) return;
+          cachedTargets = Array.isArray(data.targets) ? data.targets : [];
+          
+          // Populate Select
+          if (targetSelect) {
+            targetSelect.innerHTML = '<option value="">从列表选择...</option>';
+            cachedTargets.forEach(t => {
+               const opt = document.createElement('option');
+               opt.value = t.id;
+               opt.textContent = `${t.name || t.id} (${t.host})`;
+               targetSelect.appendChild(opt);
+            });
+          }
+          
+          renderTargetsTable();
+        } catch (err) {}
+      };
+
+      const loadRecentSessions = async () => {
+        try {
+          const resp = await fetch('/ui/recent-sessions');
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok) {
+             renderRecentSessions(data.sessions || []);
+          }
+        } catch (err) {}
+      };
+
+      const setHealth = (ok, label) => {
+        if (healthLabel) healthLabel.textContent = label;
+        if (healthDot) {
+          healthDot.className = 'status-dot ' + (ok ? 'green' : 'red');
+        }
+      };
+
+      const loadHealth = async () => {
+        try {
+          const resp = await fetch('/health');
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data.ok) {
+            setHealth(true, '系统正常');
+          } else {
+            setHealth(false, '系统异常');
+          }
+        } catch (err) {
+          setHealth(false, '连接断开');
+        }
+      };
+
+      // Event Listeners
+      if (targetSelect) {
+        targetSelect.addEventListener('change', () => {
+           if (targetSelect.value) targetInput.value = targetSelect.value;
+        });
+      }
+      
+      if (targetFilterInput) {
+        targetFilterInput.addEventListener('input', renderTargetsTable);
+      }
+      
+      if (refreshTargetsBtn) {
+        refreshTargetsBtn.addEventListener('click', loadTargets);
+      }
+      
+      if (targetResetBtn) {
+        targetResetBtn.addEventListener('click', resetTargetForm);
+      }
+      
+      if (copyLinkBtn) {
+        copyLinkBtn.addEventListener('click', () => {
+           if (sessionLink.href) {
+             navigator.clipboard.writeText(sessionLink.href);
+             const originalText = copyLinkBtn.textContent;
+             copyLinkBtn.textContent = '已复制!';
+             setTimeout(() => copyLinkBtn.textContent = originalText, 1000);
+           }
+        });
+      }
+
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const targetId = targetInput.value.trim();
+          if (!targetId) return setStatus('请输入 ID', true);
+          
+          submitBtn.disabled = true;
+          setStatus('正在创建...', false);
+          
+          try {
+            const resp = await fetch('/ui/session', {
+               method: 'POST',
+               headers: {'Content-Type': 'application/json'},
+               body: JSON.stringify({ targetId, reason: reasonInput.value.trim() })
+            });
+            const data = await resp.json();
+            
+            if (resp.ok && data.sessionUrl) {
+               setStatus('会话创建成功', false);
+               setLink(data.sessionUrl);
+               loadRecentSessions();
+            } else {
+               setStatus(data.error || '创建失败', true);
+            }
+          } catch (e) {
+            setStatus('网络错误', true);
+          } finally {
+            submitBtn.disabled = false;
+          }
+        });
+      }
+      
+      if (targetForm) {
+        targetForm.addEventListener('submit', async (e) => {
+           e.preventDefault();
+           const payload = {
+             id: newTargetIdInput.value.trim(),
+             name: newNameInput.value.trim(),
+             host: newHostInput.value.trim(),
+             username: newUsernameInput.value.trim(),
+             port: parseInt(newPortInput.value) || 22
+           };
+           if (newPasswordInput.value) payload.password = newPasswordInput.value;
+           
+           if (!payload.id || !payload.host || !payload.username) {
+             return setStatus('请完善必填信息', true);
+           }
+           
+           targetSubmitBtn.disabled = true;
+           try {
+             const url = editingTargetId ? '/ui/targets/' + encodeURIComponent(editingTargetId) : '/ui/targets';
+             const method = editingTargetId ? 'PUT' : 'POST';
+             
+             const resp = await fetch(url, {
+                method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+             });
+             
+             if (resp.ok) {
+               setStatus('保存成功', false);
+               resetTargetForm();
+               loadTargets();
+             } else {
+               const data = await resp.json();
+               setStatus(data.error || '保存失败', true);
+             }
+           } catch(e) {
+             setStatus('网络错误', true);
+           } finally {
+             targetSubmitBtn.disabled = false;
+           }
+        });
+      }
+
+      // Init
+      loadTargets();
+      loadRecentSessions();
+      loadHealth();
+    </script>
+  </body>
+</html>

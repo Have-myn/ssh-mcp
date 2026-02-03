@@ -1,0 +1,30 @@
+{
+  "name": "ssh-mcp-server",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "ldapts": "^7.1.2",
+    "mysql2": "^3.11.3",
+    "ssh2": "^1.15.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.21",
+    "@types/ssh2": "^1.11.12",
+    "@types/ws": "^8.5.10",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}
